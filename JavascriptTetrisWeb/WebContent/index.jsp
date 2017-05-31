@@ -288,22 +288,18 @@
     		        //alert("통신 실패 readyState: " + xmlhttp.readyState + "/ status: " + xmlhttp.status);
     		    }
     		}
-    		var url = "dbInsert.jsp?name=" + name + "&score=" + vscore;
+    		// 이름과 점수를 서버로 전송
+    		var url = "dbInsert.jsp?name=" + name + "&score=" + vscore; 
     		xmlhttp.open("GET", url, true); 
     		xmlhttp.send(); 
+    		
+    		location.reload();
     		
     	} else {	
     		//
     	}
-    		
     	show('start'); 
     	setVisualScore(); 
-    	
-    	// 화면 업데이트
-    	/*
-    		구현
-    	*/
-    	
     	playing = false; 
     }
     function setVisualScore(n)      { vscore = n || score; invalidateScore(); }
