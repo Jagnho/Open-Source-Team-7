@@ -5,6 +5,11 @@
     pageEncoding="EUC-KR"%>
 
 <%
+// 세션에 기록 저장
+session.setAttribute("sName", request.getParameter("name"));
+session.setAttribute("sScore", Integer.parseInt(request.getParameter("score")));
+
+// DB에 기록 추가
 	ConnectionFactory factory = ConnectionFactory.getInstance();
 	
 	Connection conn = null;

@@ -39,9 +39,32 @@
 
   <div id="rank">
   	<p>My Record</p>
+  	<%
+  	// 세션으로부터 데이터 가져오기
+  		String myName;
+  		Integer myScore;
+  		
+  		if(session.isNew()) {
+  			// 기존 세션이 존재하지 않는 경우
+	  		session.setAttribute("sName", "-");
+	  		session.setAttribute("sScore", 0);
+	  		
+	  		myName = (String)session.getAttribute("sName");
+	  		myScore = (Integer)session.getAttribute("sScore");
+	  		
+  		} else {
+  			myName = (String)session.getAttribute("sName");
+  			myScore = (Integer)session.getAttribute("sScore");
+  		}
+  		
+  		request.setAttribute("myName", myName);
+  		request.setAttribute("myScore", myScore);
+  	%>
+  	<p>${myName }: ${myScore }점</p>
   	
   	<p>Ranking</p>
 	<%
+	// DB로부터 데이터 가져오기
 		UserService service = new UserService();
 	
 		List<User> userList = new ArrayList<>();
@@ -276,7 +299,10 @@
     	show('start'); 
     	setVisualScore(); 
     	
-    	// my record 업데이트
+    	// 화면 업데이트
+    	/*
+    		구현
+    	*/
     	
     	playing = false; 
     }
