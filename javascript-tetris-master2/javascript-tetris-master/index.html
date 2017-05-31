@@ -99,6 +99,7 @@
         rows,          // number of completed rows in the current game
         step;          // how long before current piece drops by 1 row
         level = 1;     // 게임 레벨
+        audio = new Audio('Be Higher.mp3');
 
     //-------------------------------------------------------------------------
     // tetris pieces
@@ -278,7 +279,7 @@
     //-------------------------------------------------------------------------
 
     function play() { hide('start'); reset();          playing = true;  level = 1; }
-    function lose() { show('start'); setVisualScore(); playing = false; }
+    function lose() { show('start'); setVisualScore(); audio.pause(); audio.currentTime = 0; playing = false; }
 
     function setVisualScore(n)      { vscore = n || score; invalidateScore(); }
     function setScore(n)            { score = n; setVisualScore(n);  }
@@ -314,6 +315,7 @@
           dt = dt - step;
           drop();
         }
+        audio.play();
       }
     }
 
