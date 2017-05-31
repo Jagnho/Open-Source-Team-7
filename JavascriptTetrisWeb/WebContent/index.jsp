@@ -1,5 +1,4 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8"
-    pageEncoding="UTF-8"%>
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 
@@ -15,7 +14,9 @@
   
   <style>
     body      { font-family: Helvetica, sans-serif; }
-    #tetris   { margin: 1em auto; padding: 1em; border: 4px solid black; border-radius: 10px; background-color: #F8F8F8; }
+    #container{ overflow: hidden; display: table; margin: 0 auto; }
+    #rank     { float: left; display: table-cell; margin: 1em auto; margin-left: 50px; padding: 1em; background-color: #F8F8F8; }
+    #tetris   { float: left; display: table-cell; margin: 1em auto; padding: 1em; border: 4px solid black; border-radius: 10px; background-color: #F8F8F8; }
     #stats    { display: inline-block; vertical-align: top; }
     #canvas   { display: inline-block; vertical-align: top; background: url(texture.jpg); box-shadow: 10px 10px 10px #999; border: 2px solid #333; }
     #menu     { display: inline-block; vertical-align: top; position: relative; }
@@ -32,63 +33,72 @@
     @media screen and (min-width: 700px) and (min-height: 700px)  { #tetris { font-size: 1.75em; width: 650px; } #menu { width: 300px; height: 600px; } #upcoming { width: 150px; height: 150px; } #canvas { width: 300px; height: 600px; } } /* 30px chunks */
     @media screen and (min-width: 800px) and (min-height: 800px)  { #tetris { font-size: 2.00em; width: 750px; } #menu { width: 350px; height: 700px; } #upcoming { width: 175px; height: 175px; } #canvas { width: 350px; height: 700px; } } /* 35px chunks */
     @media screen and (min-width: 900px) and (min-height: 900px)  { #tetris { font-size: 2.25em; width: 850px; } #menu { width: 400px; height: 800px; } #upcoming { width: 200px; height: 200px; } #canvas { width: 400px; height: 800px; } } /* 40px chunks */
-  </style>
+  	@media screen and (min-width:   0px) and (min-height:   0px)  { .title { font-size: 0.75em; width: 150px; } .contents { font-size: 0.25em; width: 250px; } } /* 10px chunks */
+    @media screen and (min-width: 400px) and (min-height: 400px)  { .title { font-size: 1.00em; width: 250px; } .contents { font-size: 0.50em; width: 250px; } } /* 15px chunks */
+    @media screen and (min-width: 500px) and (min-height: 500px)  { .title { font-size: 1.25em; width: 350px; } .contents { font-size: 0.75em; width: 250px; } } /* 20px chunks */
+    @media screen and (min-width: 600px) and (min-height: 600px)  { .title { font-size: 1.50em; width: 450px; } .contents { font-size: 1.00em; width: 250px; } } /* 25px chunks */
+    @media screen and (min-width: 700px) and (min-height: 700px)  { .title { font-size: 1.75em; width: 550px; } .contents { font-size: 1.25em; width: 250px; } } /* 30px chunks */
+    @media screen and (min-width: 800px) and (min-height: 800px)  { .title { font-size: 2.00em; width: 650px; } .contents { font-size: 1.50em; width: 250px; } } /* 35px chunks */
+    @media screen and (min-width: 900px) and (min-height: 900px)  { .title { font-size: 2.25em; width: 750px; } .contents { font-size: 1.75em; width: 250px; } } /* 40px chunks */
+  
+   </style>
 </head>
 
 <body>
-
-  <div id="rank">
-  	<p>My Record</p>
-  	<%
-  	// 세션으로부터 데이터 가져오기
-  		String myName;
-  		Integer myScore;
-  		
-  		if(session.isNew()) {
-  			// 기존 세션이 존재하지 않는 경우
-	  		session.setAttribute("sName", "-");
-	  		session.setAttribute("sScore", 0);
-	  		
-	  		myName = (String)session.getAttribute("sName");
-	  		myScore = (Integer)session.getAttribute("sScore");
-	  		
-  		} else {
-  			myName = (String)session.getAttribute("sName");
-  			myScore = (Integer)session.getAttribute("sScore");
-  		}
-  		
-  		request.setAttribute("myName", myName);
-  		request.setAttribute("myScore", myScore);
-  	%>
-  	<p>${myName }: ${myScore }점</p>
-  	
-  	<p>Ranking</p>
-	<%
-	// DB로부터 데이터 가져오기
-		UserService service = new UserService();
-	
-		List<User> userList = new ArrayList<>();
-		userList = service.findAll();
+	<div id="container">
+	  
+	  <div id="tetris">
+	    <div id="menu">
+	      <p id="start"><a href="javascript:play();">Press Space to Play.</a></p>
+	      <p><canvas id="upcoming"></canvas></p>
+	      <p>score <span id="score">00000</span></p>
+	      <p>rows <span id="rows">0</span></p>
+	    </div>
+	    <canvas id="canvas">
+	      Sorry, this example cannot be run because your browser does not support the &lt;canvas&gt; element
+	    </canvas>
+	  </div> <!-- //tetris -->
 		
-		request.setAttribute("users", userList);
-	%>
-  	<c:forEach items="${users }" var="user" varStatus="status">
-  		<p>${user.name }: ${user.score }점</p>
-  	</c:forEach>
-  
-  </div>
-  
-  <div id="tetris">
-    <div id="menu">
-      <p id="start"><a href="javascript:play();">Press Space to Play.</a></p>
-      <p><canvas id="upcoming"></canvas></p>
-      <p>score <span id="score">00000</span></p>
-      <p>rows <span id="rows">0</span></p>
-    </div>
-    <canvas id="canvas">
-      Sorry, this example cannot be run because your browser does not support the &lt;canvas&gt; element
-    </canvas>
-  </div>
+	  <div id="rank">
+	  	<p class="title">My Record</p>
+	  	<%
+	  	// 세션으로부터 데이터 가져오기
+	  		String myName;
+	  		Integer myScore;
+	  		
+	  		if(session.isNew()) {
+	  			// 기존 세션이 존재하지 않는 경우
+		  		session.setAttribute("sName", "-");
+		  		session.setAttribute("sScore", 0);
+		  		
+		  		myName = (String)session.getAttribute("sName");
+		  		myScore = (Integer)session.getAttribute("sScore");
+		  		
+	  		} else {
+	  			myName = (String)session.getAttribute("sName");
+	  			myScore = (Integer)session.getAttribute("sScore");
+	  		}
+	  		
+	  		request.setAttribute("myName", myName);
+	  		request.setAttribute("myScore", myScore);
+	  	%>
+	  	<p class="contents">${myName } (${myScore }점)</p><br>
+	  	<p class="title">Ranking</p>
+		<%
+		// DB로부터 데이터 가져오기
+			UserService service = new UserService();
+		
+			List<User> userList = new ArrayList<>();
+			userList = service.findAll();
+			
+			request.setAttribute("users", userList);
+		%>
+	  	<c:forEach items="${users }" var="user" varStatus="status">
+	  		<p class="contents">${status.count }위: ${user.name } (${user.score }점)</p>
+	  	</c:forEach>
+	  </div> <!-- //rank -->
+	
+	</div> <!-- //container -->
 
   <script src="stats.js"></script>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
@@ -274,7 +284,6 @@
     //-------------------------------------------------------------------------
     function play() { hide('start'); reset();          playing = true;  }
     function lose() { 
-    	
     	// 점수 출력
     	if(confirm("당신의 점수는 " + vscore + "점 입니다. 등록하시겠습니까?")) {
     		var name = prompt("이름을 입력해주세요.", "noname");
@@ -282,10 +291,10 @@
     		xmlhttp.onreadystatechange = function() { 
     		    if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
     		         //통신 성공시 구현부분
-    		         //alert("등록되었습니다.");
+    		         //alert("통신 성공 - 등록되었습니다.");
     		    } else {
     		    	//통신 실패시 구현부분
-    		        //alert("통신 실패 readyState: " + xmlhttp.readyState + "/ status: " + xmlhttp.status);
+    		        //alert("통신 실패\n" + "readyState: " + xmlhttp.readyState + "\n" + "status: " + xmlhttp.status);
     		    }
     		}
     		// 이름과 점수를 서버로 전송
