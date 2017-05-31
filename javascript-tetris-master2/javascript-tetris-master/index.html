@@ -1,7 +1,7 @@
 ﻿<!DOCTYPE html>
 <html>
 <head>
-    //테스트용
+    //테스트용2
   <title>Javascript Tetris</title>
   <style>
     body      { font-family: Helvetica, sans-serif; }
@@ -14,6 +14,7 @@
     #upcoming { display: block; margin: 0 auto; background-color: #E0E0E0; }
     #score    { color: red; font-weight: bold; vertical-align: middle; }
     #rows     { color: blue; font-weight: bold; vertical-align: middle; }
+    #level     { color: green; font-weight: bold; vertical-align: middle; }
     #stats    { position: absolute; bottom: 0em; right: 1em; }
     @media screen and (min-width:   0px) and (min-height:   0px)  { #tetris { font-size: 0.75em; width: 250px; } #menu { width: 100px; height: 200px; } #upcoming { width:  50px; height:  50px; } #canvas { width: 100px; height: 200px; } } /* 10px chunks */
     @media screen and (min-width: 400px) and (min-height: 400px)  { #tetris { font-size: 1.00em; width: 350px; } #menu { width: 150px; height: 300px; } #upcoming { width:  75px; height:  75px; } #canvas { width: 150px; height: 300px; } } /* 15px chunks */
@@ -33,6 +34,7 @@
       <p><canvas id="upcoming"></canvas></p>
       <p>score <span id="score">00000</span></p>
       <p>rows <span id="rows">0</span></p>
+      <p>level <span id="level">0</span></p>
     </div>
     <canvas id="canvas">
       Sorry, this example cannot be run because your browser does not support the &lt;canvas&gt; element
@@ -96,6 +98,7 @@
         vscore,        // the currently displayed score (it catches up to score in small chunks - like a spinning slot machine)
         rows,          // number of completed rows in the current game
         step;          // how long before current piece drops by 1 row
+        level = 1;     // 게임 레벨
 
     //-------------------------------------------------------------------------
     // tetris pieces
@@ -179,11 +182,49 @@
       var last = now = timestamp();
       function frame() {
         now = timestamp();
+        if(level == 1)
         update(Math.min(1, (now - last) / 1000.0)); // using requestAnimationFrame have to be able to handle large delta's caused when it 'hibernates' in a background or non-visible tab
+        else if(level == 2)
+            update(Math.min(1, (now - last) / 900.0));
+        else if (level == 3)
+            update(Math.min(1, (now - last) / 800.0));
+        else if (level == 4)
+            update(Math.min(1, (now - last) / 700.0));
+        else if (level == 5)
+            update(Math.min(1, (now - last) / 600.0));
+        else if (level == 6)
+            update(Math.min(1, (now - last) / 500.0));
+        else if (level == 7)
+            update(Math.min(1, (now - last) / 400.0));
+        else if (level == 8)
+            update(Math.min(1, (now - last) / 300.0));
+        else if (level == 9)
+            update(Math.min(1, (now - last) / 200.0));
+        else if (level == 10)
+            update(Math.min(1, (now - last) / 100.0));
         draw();
         stats.update();
         last = now;
         requestAnimationFrame(frame, canvas);
+        if (score > 4500)
+            level = 10;
+        else if (score > 4000)
+            level = 9;
+        else if (score > 3500)
+            level = 8;
+        else if (score > 3000)
+            level = 7;
+        else if (score > 2500)
+            level = 6;
+        else if (score > 2000)
+            level = 5;
+        else if (score > 1500)
+            level = 4;
+        else if (score > 1000)
+            level = 3;
+        else if (score > 500)
+            level = 2;
+
       }
 
       resize(); // setup all our sizing information
@@ -236,7 +277,7 @@
     // GAME LOGIC
     //-------------------------------------------------------------------------
 
-    function play() { hide('start'); reset();          playing = true;  }
+    function play() { hide('start'); reset();          playing = true;  level = 1; }
     function lose() { show('start'); setVisualScore(); playing = false; }
 
     function setVisualScore(n)      { vscore = n || score; invalidateScore(); }
@@ -378,6 +419,7 @@
       drawNext();
       drawScore();
       drawRows();
+      drawLevels();
       ctx.restore(); //게임판 영역의 특성 복원
     }
 
@@ -424,6 +466,12 @@
         html('rows', rows); //줄 수 그리기
         invalid.rows = false; //함수실행 확인 변수 false로 초기화
       }
+    }
+
+    function drawLevels() { //클리어시킨 줄 수 그려주는 함수
+
+    html('level', level); //줄 수 그리기
+
     }
 
     function drawPiece(ctx, type, x, y, dir) { //블록 그리는 함수
