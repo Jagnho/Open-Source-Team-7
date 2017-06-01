@@ -1,8 +1,8 @@
 ﻿<!DOCTYPE html>
 <html>
 <head>
-    //테스트용2
   <title>Javascript Tetris</title>
+  
   <style>
     body      { font-family: Helvetica, sans-serif; }
     #tetris   { margin: 1em auto; padding: 1em; border: 4px solid black; border-radius: 10px; background-color: #F8F8F8; }
@@ -24,28 +24,38 @@
     @media screen and (min-width: 800px) and (min-height: 800px)  { #tetris { font-size: 2.00em; width: 750px; } #menu { width: 350px; height: 700px; } #upcoming { width: 175px; height: 175px; } #canvas { width: 350px; height: 700px; } } /* 35px chunks */
     @media screen and (min-width: 900px) and (min-height: 900px)  { #tetris { font-size: 2.25em; width: 850px; } #menu { width: 400px; height: 800px; } #upcoming { width: 200px; height: 200px; } #canvas { width: 400px; height: 800px; } } /* 40px chunks */
   </style>
+  
 </head>
 
 <body>
 
   <div id="tetris">
+	<!--좌측 스테이터스 영역-->
     <div id="menu">
+	  <!--space나 a 태그 링크를 누르면 play() 함수 실행과 함께 게임 시작-->
       <p id="start"><a href="javascript:play();">Press Space to Play.</a></p>
+	  <!--다음에 나올 조각-->
       <p><canvas id="upcoming"></canvas></p>
+	  <!--점수-->
       <p>score <span id="score">00000</span></p>
+	  <!--제거한 라인 수-->
       <p>rows <span id="rows">0</span></p>
       <p>level <span id="level">0</span></p>
     </div>
-    <canvas id="canvas">
+	
+	<!--우측 테트리스 코트 영역-->
+	<canvas id="canvas">
       Sorry, this example cannot be run because your browser does not support the &lt;canvas&gt; element
     </canvas>
   </div>
-
+  
+  <!--퍼포먼스 모니터-->
   <script src="stats.js"></script>
+	
   <script>
 
     //-------------------------------------------------------------------------
-    // base helper methods
+    // 함수 정의(게임 시스템 외)
     //-------------------------------------------------------------------------
 
     function get(id)        { return document.getElementById(id);  }
@@ -57,207 +67,186 @@
     function random(min, max)      { return (min + (Math.random() * (max - min)));            }
     function randomChoice(choices) { return choices[Math.round(random(0, choices.length-1))]; }
 
+	// requestAnimationFrame() - 애니메이션을 구현하기 위해 콜백함수(frame()) 호출(브라우저가 화면을 업데이트 해야하는 경우에만) 
     if (!window.requestAnimationFrame) { // http://paulirish.com/2011/requestanimationframe-for-smart-animating/
-      window.requestAnimationFrame = window.webkitRequestAnimationFrame ||
-                                     window.mozRequestAnimationFrame    ||
-                                     window.oRequestAnimationFrame      ||
-                                     window.msRequestAnimationFrame     ||
-                                     function(callback, element) {
-                                       window.setTimeout(callback, 1000 / 60);
-                                     }
+	      window.requestAnimationFrame = window.webkitRequestAnimationFrame ||
+										 window.mozRequestAnimationFrame    ||
+										 window.oRequestAnimationFrame      ||
+										 window.msRequestAnimationFrame     ||
+										 function(callback, element) {
+											window.setTimeout(callback, 1000 / 60); // setTimeout() - 2번 인자의 시간(ms)이 경과하면 1번 인자의 함수 실행
+										}
     }
 
     //-------------------------------------------------------------------------
-    // game constants
+    // 게임 상수 
     //-------------------------------------------------------------------------
 
-    var KEY     = { ESC: 27, SPACE: 32, LEFT: 65, UP: 87, RIGHT: 68, DOWN: 83 },    // LEFT : a UP : w RIGHT :68  s: DOWN  d : RIGHT
-        DIR     = { UP: 0, RIGHT: 1, DOWN: 2, LEFT: 3, MIN: 0, MAX: 3 },
+    // var KEY     = { ESC: 27, SPACE: 32, LEFT: 37, UP: 38, RIGHT: 39, DOWN: 40 }, // 방향키로 조작
+	var KEY     = { ESC: 27, SPACE: 32, LEFT: 65, UP: 87, RIGHT: 68, DOWN: 83 },    // LEFT : a / UP : w / RIGHT : s: / DOWN  d
+		DIR     = { UP: 0, RIGHT: 1, DOWN: 2, LEFT: 3, MIN: 0, MAX: 3 },
         stats   = new Stats(),
-        canvas  = get('canvas'),
+        canvas  = get('canvas'),								// 테트리스 코트
         ctx     = canvas.getContext('2d'),
-        ucanvas = get('upcoming'),
+        ucanvas = get('upcoming'),								// 미리보기 영역
         uctx    = ucanvas.getContext('2d'),
-        speed   = { start: 0.6, decrement: 0.005, min: 0.1 }, // how long before piece drops by 1 row (seconds)
-        nx      = 10, // width of tetris court (in blocks)
-        ny      = 20, // height of tetris court (in blocks)
-        nu      = 5;  // width/height of upcoming preview (in blocks)
+        speed   = { start: 0.6, decrement: 0.005, min: 0.1 },	// 한 칸 내려오는데 걸리는 시간에 관한 변수(단위: 초)
+        nx      = 10, 											// 테트리스 코트 가로 길이(단위: 블럭)
+        ny      = 20, 											// 테트리스 코트 세로 길이(단위: 블럭)
+        nu      = 5;  											// 미리보기 영역 가로, 세로 길이(단위: 블럭)
 
     //-------------------------------------------------------------------------
-    // game variables (initialized during reset)
+    // 게임 변수 (reset() 호출시 초기화)
     //-------------------------------------------------------------------------
 
-    var dx, dy,        // pixel size of a single tetris block
-        blocks,        // 2 dimensional array (nx*ny) representing tetris court - either empty block or occupied by a 'piece'
-        actions,       // queue of user actions (inputs)
-        playing,       // true|false - game is in progress
+    var dx, dy,        // 테트리스 조각을 구성하는 블록(사각형 하나)의 픽셀 사이즈
+        blocks,        // 테트리스 코트를 나타내는 2차원 배열(nx*ny)
+        actions,       // 플레이어의 조작(입력)이 저장되는 큐
+        playing,       // 게임 진행 여부(true|false)
         dt,            // time since starting this game
-        current,       // the current piece
-        next,          // the next piece
-        score,         // the current score
-        vscore,        // the currently displayed score (it catches up to score in small chunks - like a spinning slot machine)
-        rows,          // number of completed rows in the current game
-        step;          // how long before current piece drops by 1 row
+        current,       // 현재 조각
+        next,          // 다음 조각
+        score,         // 현재 점수
+        vscore,        // 화면에 보여지는 점수(조금 지나면 현재 점수로 갱신)
+        rows,          // 제거한 라인 수
+        step;          // 조각이 한 칸 내려오는데 걸리는 시간
         level = 1;     // 게임 레벨
 
-    //-------------------------------------------------------------------------
-    // tetris pieces
-    //
-    // blocks: each element represents a rotation of the piece (0, 90, 180, 270)
-    //         each element is a 16 bit integer where the 16 bits represent
-    //         a 4x4 set of blocks, e.g. j.blocks[0] = 0x44C0
-    //
-    //             0100 = 0x4 << 3 = 0x4000
-    //             0100 = 0x4 << 2 = 0x0400
-    //             1100 = 0xC << 1 = 0x00C0
-    //             0000 = 0x0 << 0 = 0x0000
-    //                               ------
-    //                               0x44C0
-    //
-    //-------------------------------------------------------------------------
+	// 테트리스 조각 관련 변수 (size: 조각이 기본 방향일 때의 가로 사이즈 / shape: 회전 각도에 따른 조각의 형태를 16진수로 나타낸 것(0, 90, 180, 270))
+    var i = { size: 4, shape: [0x0F00, 0x2222, 0x00F0, 0x4444], color: 'cyan'   };
+    var j = { size: 3, shape: [0x44C0, 0x8E00, 0x6440, 0x0E20], color: 'blue'   };
+    var l = { size: 3, shape: [0x4460, 0x0E80, 0xC440, 0x2E00], color: 'orange' };
+    var o = { size: 2, shape: [0xCC00, 0xCC00, 0xCC00, 0xCC00], color: 'yellow' };
+    var s = { size: 3, shape: [0x06C0, 0x8C40, 0x6C00, 0x4620], color: 'green'  };
+    var t = { size: 3, shape: [0x0E40, 0x4C40, 0x4E00, 0x4640], color: 'purple' };
+    var z = { size: 3, shape: [0x0C60, 0x4C80, 0xC600, 0x2640], color: 'red'    };
 
-    var i = { size: 4, blocks: [0x0F00, 0x2222, 0x00F0, 0x4444], color: 'pink'   };
-    var j = { size: 3, blocks: [0x44C0, 0x8E00, 0x6440, 0x0E20], color: 'pink'   };
-    var l = { size: 3, blocks: [0x4460, 0x0E80, 0xC440, 0x2E00], color: 'pink' };
-    var o = { size: 2, blocks: [0xCC00, 0xCC00, 0xCC00, 0xCC00], color: 'pink' };
-    var s = { size: 3, blocks: [0x06C0, 0x8C40, 0x6C00, 0x4620], color: 'pink'  };
-    var t = { size: 3, blocks: [0x0E40, 0x4C40, 0x4E00, 0x4640], color: 'pink' };
-    var z = { size: 3, blocks: [0x0C60, 0x4C80, 0xC600, 0x2640], color: 'pink'    };
-
-    //------------------------------------------------
-    // do the bit manipulation and iterate through each
-    // occupied block (x,y) for a given piece
-    //------------------------------------------------
+    //-------------------------------------------------------------------------
+    // do the bit manipulation and iterate through each occupied block (x,y) for a given piece
+    //-------------------------------------------------------------------------
+	
+	// eachblock() - 조각의 각 블록을 순회하며, 콜백함수(fn)를 수행하는 함수(type: 조각 타입 / dir: 방향)
     function eachblock(type, x, y, dir, fn) {
-      var bit, result, row = 0, col = 0, blocks = type.blocks[dir];
-      for(bit = 0x8000 ; bit > 0 ; bit = bit >> 1) {
-        if (blocks & bit) {
-          fn(x + col, y + row);
+	  var bit, 
+		  result, 
+		  row = 0, 
+		  col = 0, 
+		  shape = type.shape[dir]; // 조각의 형태를 16비트 정수로 리턴 
+	  
+      for(bit = 0x8000 ; bit > 0 ; bit = bit >> 1) {	// 4x4 공간에서 각 비트 순회
+        if (shape & bit) { 								// 블록 비트와 4x4 공간 비트를 &(비트곱) 연산. 1&1. 즉, 현재 조각이 점유하고 있는 블록만 true
+          fn(x + col, y + row); 						// 해당 블록 위치를 인자로 콜백함수 호출 (ex occupied() - 해당 블록 점유 여부 검사, setBlock() - 해당 블록 점유)
         }
-        if (++col === 4) {
-          col = 0;
-          ++row;
+        if (++col === 4) {	// 열 증가, 그리고 마지막 열까지 갔으면..
+          col = 0; 			// 열 초기화
+          ++row;			// 행 증가(다음 행으로)
         }
       }
     }
-
-    //-----------------------------------------------------
-    // check if a piece can fit into a position in the grid
-    //-----------------------------------------------------
-    function occupied(type, x, y, dir) { //블록이 게임판 안에 있는지 확인하는 함수
-      var result = false // result값 0으로 초기화
-      eachblock(type, x, y, dir, function(x, y) { //각 블록이 게임판 내부에 있는지 확인
-        if ((x < 0) || (x >= nx) || (y < 0) || (y >= ny) || getBlock(x,y))
-          result = true; //게임판 밖에 있는 블록이 있을 경우 result값 true로 변경
+	
+	// occupied(), unoccupied() - (x,y) 블록이 점유되어 있는지 확인하는 함수(ex 조각이 떨어질 때, 방향키를 눌렀을 때 호출)
+    function occupied(type, x, y, dir) {
+      var result = false;
+      eachblock(type, x, y, dir, function(x, y) {
+        if ((x < 0) || (x >= nx) || (y < 0) || (y >= ny) || getBlock(x,y)) // (x,y)가 코트 영역 밖이거나, 이미 점유된 블록인경우
+          result = true; // 점유 되어있음을 리턴
       });
-      return result; // result값 리턴
+      return result;
+    }
+    function unoccupied(type, x, y, dir) {
+      return !occupied(type, x, y, dir); // 점유 안 되어있음을 리턴
     }
 
-    function unoccupied(type, x, y, dir) { //occupied의 반대값을 리턴하는 함수
-      return !occupied(type, x, y, dir); //occupied의 반대값을 리턴
-    }
-
-    //-----------------------------------------
-    // start with 4 instances of each piece and
-    // pick randomly until the 'bag is empty'
-    //-----------------------------------------
+	// raondomPiece() - 조각 타입(type)과 생성 위치(x)를 랜덤으로 결정하는 함수
     var pieces = [];
     function randomPiece() {
       if (pieces.length == 0)
-        pieces = [i,i,i,i,j,j,j,j,l,l,l,l,o,o,o,o,s,s,s,s,t,t,t,t,z,z,z,z];
-      var type = pieces.splice(random(0, pieces.length-1), 1)[0];
+        pieces = [i,i,i,i,j,j,j,j,l,l,l,l,o,o,o,o,s,s,s,s,t,t,t,t,z,z,z,z];	
+      var type = pieces.splice(random(0, pieces.length-1), 1)[0];  // splice() - 배열에서 요소를 삭제하면서 그 삭제한 요소를 반환
       return { type: type, dir: DIR.UP, x: Math.round(random(0, nx - type.size)), y: 0 };
     }
-
 
     //-------------------------------------------------------------------------
     // GAME LOOP
     //-------------------------------------------------------------------------
-
+	
+	// run() - 프로그램 실행 (게임 시작과는 다름)
     function run() {
 
-      showStats(); // initialize FPS counter
-      addEvents(); // attach keydown and resize events
+      showStats(); // 퍼포먼스 모니터 초기화
+      addEvents(); // 키보드 이벤트, 리사이즈 이벤트 적용
 
       var last = now = timestamp();
+	  
       function frame() {
-        now = timestamp();
-        if(level == 1)
-        update(Math.min(1, (now - last) / 1000.0)); // using requestAnimationFrame have to be able to handle large delta's caused when it 'hibernates' in a background or non-visible tab
-        else if(level == 2)
-            update(Math.min(1, (now - last) / 900.0));
-        else if (level == 3)
-            update(Math.min(1, (now - last) / 800.0));
-        else if (level == 4)
-            update(Math.min(1, (now - last) / 700.0));
-        else if (level == 5)
-            update(Math.min(1, (now - last) / 600.0));
-        else if (level == 6)
-            update(Math.min(1, (now - last) / 500.0));
-        else if (level == 7)
-            update(Math.min(1, (now - last) / 400.0));
-        else if (level == 8)
-            update(Math.min(1, (now - last) / 300.0));
-        else if (level == 9)
-            update(Math.min(1, (now - last) / 200.0));
-        else if (level == 10)
-            update(Math.min(1, (now - last) / 100.0));
-        draw();
+        
+		now = timestamp(); // 현재 시간
+		
+		if (level == 1)			update(Math.min(1, (now - last) / 1000.0)); 
+        else if (level == 2)	update(Math.min(1, (now - last) / 900.0));
+        else if (level == 3)	update(Math.min(1, (now - last) / 800.0));
+        else if (level == 4)	update(Math.min(1, (now - last) / 700.0));
+        else if (level == 5)	update(Math.min(1, (now - last) / 600.0));
+        else if (level == 6)	update(Math.min(1, (now - last) / 500.0));
+        else if (level == 7)	update(Math.min(1, (now - last) / 400.0));
+        else if (level == 8)	update(Math.min(1, (now - last) / 300.0));
+        else if (level == 9)	update(Math.min(1, (now - last) / 200.0));
+        else if (level == 10)	update(Math.min(1, (now - last) / 100.0));
+		
+		draw();	// 그리기
         stats.update();
         last = now;
-        requestAnimationFrame(frame, canvas);
-        if (score > 4500)
-            level = 10;
-        else if (score > 4000)
-            level = 9;
-        else if (score > 3500)
-            level = 8;
-        else if (score > 3000)
-            level = 7;
-        else if (score > 2500)
-            level = 6;
-        else if (score > 2000)
-            level = 5;
-        else if (score > 1500)
-            level = 4;
-        else if (score > 1000)
-            level = 3;
-        else if (score > 500)
-            level = 2;
-
+        requestAnimationFrame(frame, canvas); // requestAnimationFrame() - 시간이 지나면 콜백함수인 frame()을 호출함으로써(재귀) 애니메이션 구현
+        
+		if (score > 4500)		level = 10;
+        else if (score > 4000)	level = 9;
+        else if (score > 3500)	level = 8;
+        else if (score > 3000)	level = 7;
+        else if (score > 2500)	level = 6;
+        else if (score > 2000)	level = 5;
+        else if (score > 1500)	level = 4;
+        else if (score > 1000)	level = 3;
+        else if (score > 500)	level = 2;
       }
 
-      resize(); // setup all our sizing information
-      reset();  // reset the per-game variables
-      frame();  // start the first frame
+      resize();
+      reset();
+      frame();  // 첫번째 프레임 함수 실행
 
     }
 
-    function showStats() {
+	// showStats() - 퍼포먼스 모니터를 보여주는 함수
+	function showStats() {
       stats.domElement.id = 'stats';
       get('menu').appendChild(stats.domElement);
     }
 
+	// addEvents() - 이벤트 리스너 등록
     function addEvents() {
       document.addEventListener('keydown', keydown, false);
       window.addEventListener('resize', resize, false);
     }
 
+	// resize() - 각종 크기 정보 갱신
     function resize(event) {
+	  // 캔버스 사이즈
       canvas.width   = canvas.clientWidth;  // set canvas logical size equal to its physical size
       canvas.height  = canvas.clientHeight; // (ditto)
       ucanvas.width  = ucanvas.clientWidth;
       ucanvas.height = ucanvas.clientHeight;
+	  // 블록 사이즈
       dx = canvas.width  / nx; // pixel size of a single tetris block
       dy = canvas.height / ny; // (ditto)
       invalidate();
       invalidateNext();
     }
 
+	// keydown() - 키보드 입력 이벤트 콜백 함수
     function keydown(ev) {
       var handled = false;
       if (playing) {
         switch(ev.keyCode) {
+		// actions.push() - 사용자의 키 조작을 actions[] 배열에 넣어두고, update() 함수에서 하나씩 꺼내어 수행 (사용자의 조작 명령을 빠뜨리지 않고 수행하기 위함)
           case KEY.LEFT:   actions.push(DIR.LEFT);  handled = true; break;
           case KEY.RIGHT:  actions.push(DIR.RIGHT); handled = true; break;
           case KEY.UP:     actions.push(DIR.UP);    handled = true; break;
@@ -270,30 +259,39 @@
         handled = true;
       }
       if (handled)
-        ev.preventDefault(); // prevent arrow keys from scrolling the page (supported in IE9+ and all other browsers)
+        ev.preventDefault(); // 방향키가 원래의 용도(페이지 스크롤)로 쓰이는 것 방지 (익스플로러는 9버전 이상에서 작동)
     }
 
     //-------------------------------------------------------------------------
     // GAME LOGIC
     //-------------------------------------------------------------------------
-
     function play() { hide('start'); reset();          playing = true;  level = 1; }
     function lose() { show('start'); setVisualScore(); playing = false; }
-
     function setVisualScore(n)      { vscore = n || score; invalidateScore(); }
     function setScore(n)            { score = n; setVisualScore(n);  }
     function addScore(n)            { score = score + n;   }
     function clearScore()           { setScore(0); }
     function clearRows()            { setRows(0); }
+	// setRows(n) - 제거한 라인 수(rows)가 증가할수록 step이 감소하여 조각이 더 빠르게 낙하
     function setRows(n)             { rows = n; step = Math.max(speed.min, speed.start - (speed.decrement*rows)); invalidateRows(); }
     function addRows(n)             { setRows(rows + n); }
-    function getBlock(x,y)          { return (blocks && blocks[x] ? blocks[x][y] : null); }
-    function setBlock(x,y,type)     { blocks[x] = blocks[x] || []; blocks[x][y] = type; invalidate(); }
+	// getBlock() - 블록 정보를 가져오는 함수. 움직일 때마다 호출. 
+    function getBlock(x,y)          { 
+		return (blocks && blocks[x] ? blocks[x][y] : null); // 블록을 점유한 조각의 타입을 반환 (해당 열이 비어있거나, 점유되지 않은 경우 null(=false) 반환)
+	}
+    // setBlock() - 블록 정보를 저장하는 함수. 착지시 호출.
+	function setBlock(x,y,type)     { 
+		blocks[x] = blocks[x] || [];						// if(blocks[x]) blocks[x] = blocks[x];		else blocks = [];
+		blocks[x][y] = type;								// (x,y) 블록에 착지한 조각의 타입을 대입. 그리고 blocks[x]가 값을 갖게 됨
+		invalidate(); 
+	} 
+	// clearBlocks() - blocks 배열을 비움(모든 블록 초기화)
     function clearBlocks()          { blocks = []; invalidate(); }
-    function clearActions()         { actions = []; }
+    function clearActions()         { actions = [];	}
     function setCurrentPiece(piece) { current = piece || randomPiece(); invalidate();     }
     function setNextPiece(piece)    { next    = piece || randomPiece(); invalidateNext(); }
 
+	// reset() - 게임 변수 초기화
     function reset() {
       dt = 0;
       clearActions();
@@ -304,19 +302,23 @@
       setNextPiece();
     }
 
+	// update() - 화면 갱신
     function update(idt) {
       if (playing) {
         if (vscore < score)
-          setVisualScore(vscore + 1);
-        handle(actions.shift());
-        dt = dt + idt;
-        if (dt > step) {
-          dt = dt - step;
-          drop();
+          setVisualScore(vscore + 1);	// 화면에 보이는 점수를 실제 점수로 갱신
+		  
+        handle(actions.shift());		// 키 조작 함수 호출 (shift() - 배열 첫 번째 요소를 제거하고 반환하는 함수)
+		
+        dt = dt + idt;		// 진행 시간을 갱신 (idt가 클수록 dt > step 의 시점이 빨리오고, dt도 점점 증가하므로 조각의 낙하가 빨라짐)
+		if (dt > step) {	// 진행 시간이 피스의 낙하 주기를 넘으면..
+		  dt = dt - step;	// 낙하 주기를 다시 빼주고..
+          drop(); 			// 피스 낙하
         }
       }
     }
 
+	// handle() - 키 조작
     function handle(action) {
       switch(action) {
         case DIR.LEFT:  move(DIR.LEFT);  break;
@@ -325,7 +327,8 @@
         case DIR.DOWN:  drop();          break;
       }
     }
-
+	
+	// move() - 이동
     function move(dir) {
       var x = current.x, y = current.y;
       switch(dir) {
@@ -333,7 +336,7 @@
         case DIR.LEFT:  x = x - 1; break;
         case DIR.DOWN:  y = y + 1; break;
       }
-      if (unoccupied(current.type, x, y, current.dir)) {
+      if (unoccupied(current.type, x, y, current.dir)) { // unoccupied() 검사를 통과해야 이동 수행
         current.x = x;
         current.y = y;
         invalidate();
@@ -343,52 +346,56 @@
         return false;
       }
     }
-
+	
+	// rotate() - 회전
     function rotate() {
-      var newdir = (current.dir == DIR.MAX ? DIR.MIN : current.dir + 1);
+      var newdir = (current.dir == DIR.MAX ? DIR.MIN : current.dir + 1); // 1->2->3->4->1->2.. 돌아가면서 방향 전환
       if (unoccupied(current.type, current.x, current.y, newdir)) {
         current.dir = newdir;
         invalidate();
       }
     }
-
+	
+	// drop() - 낙하
     function drop() {
-      if (!move(DIR.DOWN)) {
+      if (!move(DIR.DOWN)) {	// 한 칸 아래로 이동(false는 착지한 경우로 아래 코드 수행)
         addScore(10);
-        dropPiece();
-        removeLines();
-        setCurrentPiece(next);
+        dropPiece();			// 조각 착지
+        removeLines();			// 라인 제거 검사
+        setCurrentPiece(next);	// 다음 조각으로 전환
         setNextPiece(randomPiece());
-        clearActions();
-        if (occupied(current.type, current.x, current.y, current.dir)) {
+        clearActions();			// 사용자 입력 초기화
+        if (occupied(current.type, current.x, current.y, current.dir)) { // 새로 생성될 조각의 위치가 이미 점유되어 있으면 게임 종료
           lose();
         }
       }
     }
-
+	
+	// dropPiece() - 착지
     function dropPiece() {
       eachblock(current.type, current.x, current.y, current.dir, function(x, y) {
-        setBlock(x, y, current.type);
+        setBlock(x, y, current.type);	// 조각이 위치한 각 블록을 점유 상태로 변경
       });
     }
 
+	// removeLine() - 라인 제거
     function removeLines() {
       var x, y, complete, n = 0;
-      for(y = ny ; y > 0 ; --y) {
+      for(y = ny ; y > 0 ; --y) {		// 바닥(y = ny)에서부터 천장(y = 0)까지..
         complete = true;
         for(x = 0 ; x < nx ; ++x) {
-          if (!getBlock(x, y))
+          if (!getBlock(x, y))			// 빈 블록이 있는 경우 라인을 제거하지 않음
             complete = false;
         }
-        if (complete) {
-          removeLine(y);
-          y = y + 1; // recheck same line
+        if (complete) {					// 완성된 라인이면..
+          removeLine(y);				// 라인 제거
+          y = y + 1;					// 윗줄로 대체된 라인을 다시 검사해야 하므로 아래로 한 칸 이동
           n++;
         }
       }
       if (n > 0) {
         addRows(n);
-        addScore(100*Math.pow(2,n-1)); // 1: 100, 2: 200, 3: 400, 4: 800
+        addScore(100*Math.pow(2,n-1));	// 1: 100, 2: 200, 3: 400, 4: 800
       }
     }
 
@@ -396,7 +403,7 @@
       var x, y;
       for(y = n ; y >= 0 ; --y) {
         for(x = 0 ; x < nx ; ++x)
-          setBlock(x, y, (y == 0) ? null : getBlock(x, y-1));
+          setBlock(x, y, (y == 0) ? null : getBlock(x, y-1)); // n 위로는 모두 자신의 윗줄로 대체(한 줄 내려오는 효과)
       }
     }
 
@@ -405,12 +412,12 @@
     //-------------------------------------------------------------------------
 
     var invalid = {}; //각각의 부분별 다시 그려줘야 할지 판단할 때 쓰이는 변수
-
+	
     function invalidate()         { invalid.court  = true; } //게임판 내부를 다시 그려줘야 할 시
     function invalidateNext()     { invalid.next   = true; } //다음블록모양 다시 그려줘야 할 시 실행
     function invalidateScore()    { invalid.score  = true; } //점수 다시 그려줘야 할 시
     function invalidateRows()     { invalid.rows   = true; } //없앤 줄 수 다시 그려줘야 할 시
-
+	
     function draw() { // 그리기 작업을 해주는 함수 각각의 그리기 함수를 포함함
       ctx.save(); //게임판 영역의 특성 저장
       ctx.lineWidth = 1; //게임판 영역의 외각선 두께 변경
@@ -422,7 +429,7 @@
       drawLevels();
       ctx.restore(); //게임판 영역의 특성 복원
     }
-
+	
     function drawCourt() { //게임판 내부를 그리는 함수
       if (invalid.court) { // invalid.court변수의 값이 true일 경우 실행
         ctx.clearRect(0, 0, canvas.width, canvas.height); //게임판 내부 그림 클리어
@@ -439,7 +446,7 @@
         invalid.court = false; //함수실행 확인 변수 false로 초기화
       }
     }
-
+	
     function drawNext() { //다음 블록모양 그려주는 함수
       if (invalid.next) { // invalid.next변수의 값이 true일 경우 실행
         var padding = (nu - next.type.size) / 2; // half-arsed attempt at centering next piece display
@@ -453,33 +460,31 @@
         invalid.next = false; //함수실행 확인 변수 false로 초기화
       }
     }
-
+	
     function drawScore() { //점수를 그려주는 함수
       if (invalid.score) { // invalid.score변수가 true일 경우 실행
         html('score', ("00000" + Math.floor(vscore)).slice(-5)); // 점수 그리기
         invalid.score = false; //함수실행 확인 변수 false로 초기화
       }
     }
-
+	
     function drawRows() { //클리어시킨 줄 수 그려주는 함수
       if (invalid.rows) { // invalid.rows 변수가 true일 경우 실행
         html('rows', rows); //줄 수 그리기
         invalid.rows = false; //함수실행 확인 변수 false로 초기화
       }
     }
-
+	
     function drawLevels() { //클리어시킨 줄 수 그려주는 함수
-
-    html('level', level); //줄 수 그리기
-
+		html('level', level); //줄 수 그리기
     }
-
+	
     function drawPiece(ctx, type, x, y, dir) { //블록 그리는 함수
       eachblock(type, x, y, dir, function(x, y) {
         drawBlock(ctx, x, y, type.color);
       });
     }
-
+	
     function drawBlock(ctx, x, y, color) { // 블록의 각각의 조각 그리는 함수
       ctx.fillStyle = color;
       ctx.fillRect(x*dx, y*dy, dx, dy);
