@@ -99,6 +99,7 @@
         rows,          // number of completed rows in the current game
         step;          // how long before current piece drops by 1 row
         level = 1;     // 게임 레벨
+        audio = new Audio('Be Higher.mp3'); // 오디오 변수
 
     //-------------------------------------------------------------------------
     // tetris pieces
@@ -182,7 +183,7 @@
       var last = now = timestamp();
       function frame() {
         now = timestamp();
-        if(level == 1)
+        if(level == 1) // 레벨에 따른 게임속도 조절기능 1레벨 기준으로 레벨업 할수록 단리 10퍼센트씩 빨라짐
         update(Math.min(1, (now - last) / 1000.0)); // using requestAnimationFrame have to be able to handle large delta's caused when it 'hibernates' in a background or non-visible tab
         else if(level == 2)
             update(Math.min(1, (now - last) / 900.0));
@@ -206,7 +207,7 @@
         stats.update();
         last = now;
         requestAnimationFrame(frame, canvas);
-        if (score > 4500)
+        if (score > 4500) // 레벨 정하는 조건문 점수 500단위로 레벨1씩 증가
             level = 10;
         else if (score > 4000)
             level = 9;
@@ -278,7 +279,7 @@
     //-------------------------------------------------------------------------
 
     function play() { hide('start'); reset();          playing = true;  level = 1; }
-    function lose() { show('start'); setVisualScore(); playing = false; }
+    function lose() { show('start'); setVisualScore(); audio.pause(); audio.currentTime = 0; playing = false; } // 게임이 종료되었을때 실행되는 함수 오디오를 종료하고 재생위치를 처음으로 되돌린다.
 
     function setVisualScore(n)      { vscore = n || score; invalidateScore(); }
     function setScore(n)            { score = n; setVisualScore(n);  }
@@ -314,6 +315,7 @@
           dt = dt - step;
           drop();
         }
+        audio.play(); // 게임이 실행중일시 오디오 플레이
       }
     }
 
@@ -468,9 +470,9 @@
       }
     }
 
-    function drawLevels() { //클리어시킨 줄 수 그려주는 함수
+    function drawLevels() { //레벨 그려주는 함수
 
-    html('level', level); //줄 수 그리기
+    html('level', level); //레벨 그리기
 
     }
 
