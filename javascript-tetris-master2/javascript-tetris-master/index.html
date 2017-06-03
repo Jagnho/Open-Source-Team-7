@@ -163,12 +163,13 @@
     // pick randomly until the 'bag is empty'
     //-----------------------------------------
     var pieces = [];
-    function randomPiece() {
-      if (pieces.length == 0)
-        pieces = [i,i,i,i,j,j,j,j,l,l,l,l,o,o,o,o,s,s,s,s,t,t,t,t,z,z,z,z];
-      var type = pieces.splice(random(0, pieces.length-1), 1)[0];
+    function randomPiece() { //테트리스 조각을 랜덤하게 사용하는 함수
+      if (pieces.length == 0)//만약 설정한 테트리스 조각이 모두 사용되는 경우에 다시 28개의 랜덤 블록 피스를 생성
+        pieces = [i,i,i,i,j,j,j,j,l,l,l,l,o,o,o,o,s,s,s,s,t,t,t,t,z,z,z,z]; //7개의 조각이 각 4개씩 생성
+      var type = pieces.splice(random(0, pieces.length-1), 1)[0];//piece의 타입 결정
       return { type: type, dir: DIR.UP, x: Math.round(random(0, nx - type.size)), y: 0 };
     }
+
 
 
     //-------------------------------------------------------------------------
@@ -374,31 +375,31 @@
       });
     }
 
-    function removeLines() {
+    function removeLines() { //라인별로 한줄씩 체크해 조건에 부합하면 해당줄을 제거하는 함수
       var x, y, complete, n = 0;
-      for(y = ny ; y > 0 ; --y) {
-        complete = true;
+      for(y = ny ; y > 0 ; --y) { //기준점은 테트리스 게임창 맨 상단으로 for문을 이용 전체줄을 체크
+        complete = true; //블록이 있으면 true 할당됨
         for(x = 0 ; x < nx ; ++x) {
           if (!getBlock(x, y))
-            complete = false;
+            complete = false; //블록이 없으면 false값이 할당됨 
         }
-        if (complete) {
-          removeLine(y);
-          y = y + 1; // recheck same line
-          n++;
+        if (complete) { //빠진 블록이 없을경우 , 즉 모든 x값이 있는 경우
+          removeLine(y); //해당 블록 줄을 제거 
+          y = y + 1; // recheck same line (한줄을 다시 체크)
+          n++; //몇줄을 지웠는지 n값에 할당
         }
       }
-      if (n > 0) {
+      if (n > 0) { //지워진 블록 라인이 있을경우
         addRows(n);
-        addScore(100*Math.pow(2,n-1)); // 1: 100, 2: 200, 3: 400, 4: 800
+        addScore(100*Math.pow(2,n-1)); // 1: 100, 2: 200, 3: 400, 4: 800 //없어진 줄의 수(n)만큼 점수를 할당
       }
-    }								//라인을 지워주고 점수를 매긴다
+    }
 
-    function removeLine(n) {
+    function removeLine(n) { //라인 제거 함수 , 라인 제거 후 해당 블록라인 윗 블록을 한줄씩 내림 
       var x, y;
-      for(y = n ; y >= 0 ; --y) {
+      for(y = n ; y >= 0 ; --y) { //게임창 세로 y와 가로 x를 for문으로 반복하여 블록 체크
         for(x = 0 ; x < nx ; ++x)
-          setBlock(x, y, (y == 0) ? null : getBlock(x, y-1));
+          setBlock(x, y, (y == 0) ? null : getBlock(x, y-1)); //블록 값을 setblock으로 값을 받아 원래의 값보다 한줄 아래 y-1옮겨진 자리에 설정
       }
     }
 
