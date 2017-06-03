@@ -1,7 +1,7 @@
 ﻿<!DOCTYPE html>
 <html>
 <head>
-    //테스트용2
+  //테스트용
   <title>Javascript Tetris</title>
   <style>
     body      { font-family: Helvetica, sans-serif; }
@@ -71,7 +71,7 @@
     // game constants
     //-------------------------------------------------------------------------
 
-    var KEY     = { ESC: 27, SPACE: 32, LEFT: 65, UP: 87, RIGHT: 68, DOWN: 83 },    // LEFT : a UP : w RIGHT :68  s: DOWN  d : RIGHT
+    var KEY     = { ESC: 27, SPACE: 32, LEFT: 65, UP: 87, RIGHT: 68, DOWN: 83 },    // Change LEFT : a UP : w RIGHT :68  s: DOWN  d : RIGHT
         DIR     = { UP: 0, RIGHT: 1, DOWN: 2, LEFT: 3, MIN: 0, MAX: 3 },
         stats   = new Stats(),
         canvas  = get('canvas'),
@@ -117,7 +117,7 @@
     //
     //-------------------------------------------------------------------------
 
-    var i = { size: 4, blocks: [0x0F00, 0x2222, 0x00F0, 0x4444], color: 'pink'   };
+    var i = { size: 4, blocks: [0x0F00, 0x2222, 0x00F0, 0x4444], color: 'blue'   };
     var j = { size: 3, blocks: [0x44C0, 0x8E00, 0x6440, 0x0E20], color: 'pink'   };
     var l = { size: 3, blocks: [0x4460, 0x0E80, 0xC440, 0x2E00], color: 'pink' };
     var o = { size: 2, blocks: [0xCC00, 0xCC00, 0xCC00, 0xCC00], color: 'pink' };
@@ -228,8 +228,8 @@
 
       }
 
-      resize(); // setup all our sizing information
-      reset();  // reset the per-game variables
+      resize(); // setup all our sizing information 
+      reset();  // reset the per-game variables	    
       frame();  // start the first frame
 
     }
@@ -249,7 +249,7 @@
       canvas.height  = canvas.clientHeight; // (ditto)
       ucanvas.width  = ucanvas.clientWidth;
       ucanvas.height = ucanvas.clientHeight;
-      dx = canvas.width  / nx; // pixel size of a single tetris block
+      dx = canvas.width  / nx; // 테트리스 블럭 하나의 픽셀 크기
       dy = canvas.height / ny; // (ditto)
       invalidate();
       invalidateNext();
@@ -265,13 +265,13 @@
           case KEY.DOWN:   actions.push(DIR.DOWN);  handled = true; break;
           case KEY.ESC:    lose();                  handled = true; break;
         }
-      }
+      }							//각각의 키가 눌러질 때 생기는 액션 정의 ex)왼쪽키를 누르면 왼쪽으로 바뀐다.
       else if (ev.keyCode == KEY.SPACE) {
         play();
         handled = true;
       }
       if (handled)
-        ev.preventDefault(); // prevent arrow keys from scrolling the page (supported in IE9+ and all other browsers)
+        ev.preventDefault(); // 방향키가 눌러질 때 인터넷 창이 바뀌지 않게 방지한다 
     }
 
     //-------------------------------------------------------------------------
@@ -392,7 +392,7 @@
         addRows(n);
         addScore(100*Math.pow(2,n-1)); // 1: 100, 2: 200, 3: 400, 4: 800
       }
-    }
+    }								//라인을 지워주고 점수를 매긴다
 
     function removeLine(n) {
       var x, y;
