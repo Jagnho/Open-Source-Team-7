@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
   <title>Javascript Tetris</title>
@@ -177,8 +177,13 @@
     //-------------------------------------------------------------------------
     // GAME LOOP
     //-------------------------------------------------------------------------
+      
 	
 	// run() - 프로그램 실행 (게임 시작과는 다름)
+    //--------------------------------------------------------------------------
+    /* 기본적인 Game Loop(게임 동작)을 위한 함수 실행 부분. 안에는 HTML안에서 동적인 요소작동을
+    위한 속성할당(showState())과 이벤트 액셜을 위한 함수(addEvents) 호출이 존재한다. */
+    //-------------------------------------------------------------------------- 
     function run() {
 
       showStats(); // 퍼포먼스 모니터 초기화
@@ -218,30 +223,36 @@
         else if (score > 500)	level = 2;
       }
 
-      resize();
-      reset();
-      frame();  // 첫번째 프레임 함수 실행
+      resize(); // 모든 Sizing information을 setup
+      reset(); //  per-game,게임당 변수를 초기화
+      frame();  // start the first frame [ 첫번째 프래임 실행 ]
+
     }
 
+    
+    // HTML요소를 표현하고, 이를 통해 태그 이름이나 자식, 속성 같은 정보에 접근을 가능케 하기 위한 함수
 	// showStats() - 퍼포먼스 모니터를 보여주는 함수
 	function showStats() {
-      stats.domElement.id = 'stats';
-      get('menu').appendChild(stats.domElement);
+      stats.domElement.id = 'stats'; // 별도의 stats.js 자바스크립트 파일 존재
+      get('menu').appendChild(stats.domElement); // stats 아이디를 가진 속성에 구성될 menu의 동적인 요소 추가
     }
 
 	// addEvents() - 이벤트 리스너 등록
     function addEvents() {
-      document.addEventListener('keydown', keydown, false);
-      window.addEventListener('resize', resize, false);
+      document.addEventListener('keydown', keydown, false); // 키보드를 눌렀을 때 블록이 내려가는 Keydown 이벤트 등록
+      window.addEventListener('resize', resize, false); // 윈도우 resize 이벤트 등록
     }
 
 	// resize() - 각종 크기 정보 갱신
     function resize(event) {
-	  // 캔버스 사이즈
-      canvas.width   = canvas.clientWidth;  // set canvas logical size equal to its physical size
-      canvas.height  = canvas.clientHeight; // (ditto)
+      canvas.width   = canvas.clientWidth;  
+      canvas.height  = canvas.clientHeight; 
+      // set canvas logical size equal to its physical size [ 테트리스 게임을 진행할 캔버스에 대한 높이,넓이 설정 ]
+      
       ucanvas.width  = ucanvas.clientWidth;
       ucanvas.height = ucanvas.clientHeight;
+      // 테트리스 게임에 이용 될 테트리스 블록에 대한 높이, 넓이 설정
+        
       dx = canvas.width  / nx; // 테트리스 블럭 하나의 픽셀 크기
       dy = canvas.height / ny; // (ditto)
       invalidate();
