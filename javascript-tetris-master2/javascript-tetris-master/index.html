@@ -128,7 +128,7 @@
     var s = { size: 3, shape: [0x06C0, 0x8C40, 0x6C00, 0x4620], color: 'blue' 	};
     var t = { size: 3, shape: [0x0E40, 0x4C40, 0x4E00, 0x4640], color: 'pink'	};
     var z = { size: 3, shape: [0x0C60, 0x4C80, 0xC600, 0x2640], color: 'pink'	};
-    var z1 = { size: 3, blocks: [0x4E40, 0x4E40, 0x4E40, 0x4E40], color: 'red'    }; // 십자가 모양 블럭 추가
+    var x = { size: 3, shape: [0x4E40, 0x4E40, 0x4E40, 0x4E40], color: 'red'   }; // 십자가 모양 블럭 추가
 
 
     
@@ -172,7 +172,7 @@
     var pieces = [];
     function randomPiece() {
       if (pieces.length == 0)	// 만약 설정한 테트리스 조각이 모두 사용되는 경우에 다시 28개의 랜덤 블록 피스를 생성
-        pieces = [i,i,i,i,j,j,j,j,l,l,l,l,o,o,o,o,s,s,s,s,t,t,t,t,z,z,z,z,z1,z1,z1,z1]; // 7개의 조각이 각 4개씩 생성
+        pieces = [i,i,i,i,j,j,j,j,l,l,l,l,o,o,o,o,s,s,s,s,t,t,t,t,z,z,z,z,x,x,x,x]; // 7개의 조각이 각 4개씩 생성
       var type = pieces.splice(random(0, pieces.length-1), 1)[0];  // piece의 타입 결정, splice() - 배열에서 요소를 삭제하면서 그 삭제한 요소를 반환
       return { type: type, dir: DIR.UP, x: Math.round(random(0, nx - type.size)), y: 0 };
     }
