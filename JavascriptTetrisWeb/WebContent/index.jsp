@@ -18,7 +18,7 @@
     #rank     { float: left; display: table-cell; margin: 1em auto; margin-left: 50px; padding: 1em; background-color: #F8F8F8; }
     #tetris   { float: left; display: table-cell; margin: 1em auto; padding: 1em; border: 4px solid black; border-radius: 10px; background-color: #F8F8F8; }
     #stats    { display: inline-block; vertical-align: top; }
-    #canvas   { display: inline-block; vertical-align: top; background: url(sky.jpg); box-shadow: 10px 10px 10px #999; border: 2px solid #333; }
+    #canvas   { display: inline-block; vertical-align: top; background: url(bg.png); box-shadow: 10px 10px 10px #999; border: 2px solid #333; }
     #menu     { display: inline-block; vertical-align: top; position: relative; }
     #menu p   { margin: 0.5em 0; text-align: center; }
     #menu p a { text-decoration: none; color: black; }
@@ -184,24 +184,18 @@
         rows,          // 제거한 라인 수
         step;          // 조각이 한 칸 내려오는데 걸리는 시간
         level = 1;     // 게임 레벨
-        audio = new Audio('Be Higher.mp3'); // 오디오 변수
+        bgmAudio = new Audio('About_That_Oldie.mp3'); // 오디오 변수
+        lineAudio = new Audio('191591__fins__button.wav');
 
 	// 테트리스 조각 관련 변수 (size: 조각이 기본 방향일 때의 가로 사이즈 / shape: 회전 각도에 따른 조각의 형태를 16진수로 나타낸 것(0, 90, 180, 270))
-    //var i = { size: 4, shape: [0x0F00, 0x2222, 0x00F0, 0x4444], color: 'cyan'   };
-    //var j = { size: 3, shape: [0x44C0, 0x8E00, 0x6440, 0x0E20], color: 'blue'   };
-    //var l = { size: 3, shape: [0x4460, 0x0E80, 0xC440, 0x2E00], color: 'orange' };
-    //var o = { size: 2, shape: [0xCC00, 0xCC00, 0xCC00, 0xCC00], color: 'yellow' };
-    //var s = { size: 3, shape: [0x06C0, 0x8C40, 0x6C00, 0x4620], color: 'green'  };
-    //var t = { size: 3, shape: [0x0E40, 0x4C40, 0x4E00, 0x4640], color: 'purple' };
-    //var z = { size: 3, shape: [0x0C60, 0x4C80, 0xC600, 0x2640], color: 'red'    };
-    var i = { size: 4, shape: [0x0F00, 0x2222, 0x00F0, 0x4444], color: 'blue'   };
-    var j = { size: 3, shape: [0x44C0, 0x8E00, 0x6440, 0x0E20], color: 'green'  };
-    var l = { size: 3, shape: [0x4460, 0x0E80, 0xC440, 0x2E00], color: 'pink'	};
-    var o = { size: 2, shape: [0xCC00, 0xCC00, 0xCC00, 0xCC00], color: 'green'	};
-    var s = { size: 3, shape: [0x06C0, 0x8C40, 0x6C00, 0x4620], color: 'blue' 	};
-    var t = { size: 3, shape: [0x0E40, 0x4C40, 0x4E00, 0x4640], color: 'pink'	};
-    var z = { size: 3, shape: [0x0C60, 0x4C80, 0xC600, 0x2640], color: 'pink'	};
-    var x = { size: 3, shape: [0x4E40, 0x4E40, 0x4E40, 0x4E40], color: 'red'    }; // 십자가 모양 블럭 추가
+    var i = { size: 4, shape: [0x0F00, 0x2222, 0x00F0, 0x4444], color: '#3CB4FF'};
+    var j = { size: 3, shape: [0x44C0, 0x8E00, 0x6440, 0x0E20], color: '#40E0D0'};
+    var l = { size: 3, shape: [0x4460, 0x0E80, 0xC440, 0x2E00], color: '#FF92B1'};
+    var o = { size: 2, shape: [0xCC00, 0xCC00, 0xCC00, 0xCC00], color: '#9EF048'};
+    var s = { size: 3, shape: [0x06C0, 0x8C40, 0x6C00, 0x4620], color: '#FFF56E'};
+    var t = { size: 3, shape: [0x0E40, 0x4C40, 0x4E00, 0x4640], color: '#FF8200'};
+    var z = { size: 3, shape: [0x0C60, 0x4C80, 0xC600, 0x2640], color: '#BE32BE'};
+    var x = { size: 3, shape: [0x4E40, 0x4E40, 0x4E40, 0x4E40], color: '#BEBEBE'}; // 십자가 모양 블럭 추가
 
     //-------------------------------------------------------------------------
     // do the bit manipulation and iterate through each occupied block (x,y) for a given piece
@@ -249,14 +243,13 @@
     }
 
     //-------------------------------------------------------------------------
-    // GAME LOOP
-    //-------------------------------------------------------------------------
-      
-	// run() - 프로그램 실행 (게임 시작과는 다름)
+    // GAME LOOP    
     //--------------------------------------------------------------------------
     /* 기본적인 Game Loop(게임 동작)을 위한 함수 실행 부분. 안에는 HTML안에서 동적인 요소작동을
-    위한 속성할당(showState())과 이벤트 액셜을 위한 함수(addEvents) 호출이 존재한다. */
+    	위한 속성할당(showState())과 이벤트 액셜을 위한 함수(addEvents) 호출이 존재한다. */
     //-------------------------------------------------------------------------- 
+    
+	// run() - 프로그램 실행 (게임 시작과는 다름)
     function run() {
 
       showStats(); // 퍼포먼스 모니터 초기화
@@ -383,8 +376,8 @@
     	}
 		show('start'); 
 		setVisualScore(); 
-		audio.pause(); 			// 오디오 종료
-		audio.currentTime = 0;	// 오디오 재생위치를 처음으로 되돌린다.
+		bgmAudio.pause(); 			// 오디오 종료
+		bgmAudio.currentTime = 0;	// 오디오 재생위치를 처음으로 되돌린다.
 		playing = false; 
 	}
     function setVisualScore(n)      { vscore = n || score; invalidateScore(); }
@@ -435,7 +428,7 @@
 		  dt = dt - step;	// 낙하 주기를 다시 빼주고..
           drop(); 			// 피스 낙하
         }
-        audio.play(); // 게임이 실행중일시 오디오 플레이
+		bgmAudio.play(); // 게임이 실행중일시 오디오 플레이
       }
     }
 
@@ -510,6 +503,7 @@
         }
         if (complete) {					// 완성된 라인이면..
           removeLine(y);				// 라인 제거
+	  	  lineAudio.play(); 
           y = y + 1;					// 윗줄로 대체된 라인을 다시 검사해야 하므로 아래로 한 칸 이동
           n++;							// 몇줄을 지웠는지 n값에 할당
         }
@@ -594,7 +588,7 @@
       }
     }
 	
-	// drawRows() - 클리어시킨 줄 수 그려주는 함수
+	// drawRows() - 제거한 라인 수를 그려주는 함수
     function drawRows() {
       if (invalid.rows) {		// invalid.rows 변수가 true일 경우 실행
         html('rows', rows);		// 줄 수 그리기
@@ -607,14 +601,14 @@
       html('level', level);	// 레벨 그리기
     }
 	
-	// drawPiece() - 블록 그리는 함수
+	// drawPiece() - 조각을 그리는 함수
     function drawPiece(ctx, type, x, y, dir) { 
       eachblock(type, x, y, dir, function(x, y) {
         drawBlock(ctx, x, y, type.color);
       });
     }
 	
-	// drawBlock() - 블록의 각각의 조각 그리는 함수
+	// drawBlock() - 블록을 그리는 함수
     function drawBlock(ctx, x, y, color) {
       ctx.fillStyle = color;
       ctx.fillRect(x*dx, y*dy, dx, dy);
