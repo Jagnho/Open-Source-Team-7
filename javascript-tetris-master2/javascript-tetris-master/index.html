@@ -71,7 +71,7 @@
     // game constants
     //-------------------------------------------------------------------------
 
-    var KEY     = { ESC: 27, SPACE: 32, LEFT: 65, UP: 87, RIGHT: 68, DOWN: 83 },    // Change LEFT : a UP : w RIGHT :68  s: DOWN  d : RIGHT
+    var KEY     = { ESC: 27, SPACE: 32, LEFT: 65, UP: 87, RIGHT: 68, DOWN: 83 ,VERTICAL: 70 },    // Change LEFT : a UP : w RIGHT :68  s: DOWN  d : RIGHT
         DIR     = { UP: 0, RIGHT: 1, DOWN: 2, LEFT: 3, MIN: 0, MAX: 3 },
         stats   = new Stats(),
         canvas  = get('canvas'),
@@ -263,6 +263,7 @@
           case KEY.RIGHT:  actions.push(DIR.RIGHT); handled = true; break;
           case KEY.UP:     actions.push(DIR.UP);    handled = true; break;
           case KEY.DOWN:   actions.push(DIR.DOWN);  handled = true; break;
+	  case KEY.VERTICAL: While{actions.push(DIR.DOWN);} handled = true; break; 
           case KEY.ESC:    lose();                  handled = true; break;
         }
       }							//각각의 키가 눌러질 때 생기는 액션 정의 ex)왼쪽키를 누르면 왼쪽으로 바뀐다.
